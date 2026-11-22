@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jobs That Could Exist: Neon Robot Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0A0614; --panel:#1A0F2E; --cyan:#22E4FF; --magenta:#FF2E88; --yellow:#FFE14D; --ink:#F5F0FF; --muted:#B8A9D9; }
+  html, body { margin: 0; min-height: 100%; }
+  html { background: #05030c; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: auto; padding: 16px 0; box-sizing: border-box; background: transparent; position: relative; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 0%, #1d0d3d, #05030c 75%);
+    animation: glowshift 12s ease-in-out infinite alternate; }
+  @keyframes glowshift { from { opacity: 0.75; transform: scale(1); } to { opacity: 1; transform: scale(1.06); } }
+  .streak { position: fixed; top: -40%; width: 2px; height: 28%; z-index: -1; pointer-events: none;
+    background: linear-gradient(transparent, var(--cyan), transparent); box-shadow: 0 0 10px var(--cyan);
+    animation: streakfall linear infinite; }
+  .streak.m { background: linear-gradient(transparent, var(--magenta), transparent); box-shadow: 0 0 10px var(--magenta); }
+  @keyframes streakfall { from { transform: translateY(0); } to { transform: translateY(260vh); } }
+  .ostream { position: fixed; top: -60%; z-index: -1; pointer-events: none; font-family: monospace; font-size: 12px; line-height: 1.6; white-space: pre; color: var(--cyan); opacity: 0.25; animation: ostreamfall linear infinite; }
+  .ostream.m { color: var(--magenta); }
+  @keyframes ostreamfall { from { transform: translateY(0); } to { transform: translateY(260vh); } }
+  .play { margin-top: 14px; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 2px; color: #22E4FF; background: transparent; border: 1px solid #22E4FF; border-radius: 4px; padding: 10px 18px; cursor: pointer; box-shadow: 0 0 12px rgba(34,228,255,0.5); }
+  .play:hover { background: rgba(34,228,255,0.12); }
+
+  .poster {
+    position: relative; width: min(94vw, 560px); padding-bottom: 28px; overflow: hidden;
+    background:
+      radial-gradient(ellipse at 90% 0%, rgba(255,46,136,0.28), transparent 55%),
+      radial-gradient(ellipse at 10% 100%, rgba(34,228,255,0.2), transparent 55%),
+      linear-gradient(rgba(34,228,255,0.07) 1px, transparent 1px) 0 0 / 100% 28px,
+      linear-gradient(90deg, rgba(255,46,136,0.06) 1px, transparent 1px) 0 0 / 28px 100%,
+      var(--bg);
+    box-shadow: 0 0 0 1px var(--cyan), 0 0 50px rgba(255,46,136,0.35);
+    font-family: 'Rajdhani', sans-serif; color: var(--ink);
+    animation: gridmove 2s linear infinite;
+  }
+  @keyframes gridmove { from { background-position: 0 0, 0 0, 0 0, 0 0; } to { background-position: 0 0, 0 0, 0 28px, 28px 0; } }
+
+  .scan { position: absolute; inset: 0; z-index: 9; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0 1px, transparent 1px 4px); }
+  .sweep { position: absolute; left: 0; right: 0; height: 22%; z-index: 8; pointer-events: none;
+    background: linear-gradient(transparent, rgba(34,228,255,0.16), transparent);
+    animation: sweep 5s linear infinite; }
+  @keyframes sweep { from { top: -25%; } to { top: 105%; } }
+
+  .particles { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+  .particles i { position: absolute; bottom: -10px; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: rise linear infinite; }
+  .particles i.m { background: var(--magenta); box-shadow: 0 0 8px var(--magenta); }
+  @keyframes rise { from { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } to { transform: translateY(-820px); opacity: 0; } }
+
+  .corner { position: absolute; width: 26px; height: 26px; border: 2px solid var(--magenta); z-index: 7;
+    filter: drop-shadow(0 0 5px var(--magenta)); animation: cpulse 2.5s ease-in-out infinite; }
+  @keyframes cpulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+  .tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+  .tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+  .bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+  .br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+  .circuit { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+  .circuit path { fill: none; stroke: var(--cyan); stroke-width: 1.5; opacity: 0.6;
+    stroke-dasharray: 600; stroke-dashoffset: 600; animation: trace 20s infinite; }
+  .circuit path.m { stroke: var(--magenta); }
+  .circuit path:nth-child(2) { animation-delay: -4s; }
+  .circuit path:nth-child(3) { animation-delay: -9s; }
+  @keyframes trace { 0% { stroke-dashoffset: 600; } 25% { stroke-dashoffset: 0; } 85% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -600; } }
+
+  .bot { position: absolute; top: 14px; right: 14px; width: 52px; z-index: 6; animation: bob 2.4s ease-in-out infinite; filter: drop-shadow(0 0 6px var(--cyan)); }
+  @keyframes bob { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-4px) rotate(2deg); } }
+  .gabi { position: absolute; top: 102px; right: 14px; width: 52px; text-align: center; z-index: 6; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 10px; letter-spacing: 2px; color: var(--yellow); text-shadow: 0 0 6px var(--yellow); }
+
+  header { position: relative; z-index: 4; padding: 6% 22% 0 8%; }
+  .kicker { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: clamp(11px, 2vw, 14px); letter-spacing: 3px; color: var(--yellow); }
+  h1 { font-family: 'Orbitron', sans-serif; font-weight: 800; margin: 6px 0 0; font-size: clamp(15px, 3vw, 20px); line-height: 1.15;
+    text-shadow: -2px 0 var(--magenta), 2px 0 var(--cyan), 0 0 12px rgba(34,228,255,0.6); animation: flicker 20s infinite; }
+  @keyframes flicker { 0%,3%,5%,100% { opacity: 1; } 4% { opacity: 0.35; } 60%,62% { opacity: 1; } 61% { opacity: 0.55; } }
+  .hud { font-family: monospace; font-size: 10px; letter-spacing: 1.5px; color: var(--cyan); margin-top: 8px; opacity: 0.9; }
+  .hud .blink { color: var(--magenta); animation: blink 1s steps(2) infinite; }
+  @keyframes blink { to { visibility: hidden; } }
+  .rule { height: 2px; width: 100%; margin-top: 10px; background: linear-gradient(90deg, var(--magenta), var(--cyan), transparent);
+    transform-origin: left; animation: none; }
+
+  .grid { position: relative; z-index: 4; display: grid; grid-template-columns: 1fr 1fr; gap: 2% 3%; padding: 4% 8% 0; }
+  .card { position: relative; border: 2px solid transparent; border-radius: 6px; padding: 4% 5%; opacity: 0;
+    background:
+      linear-gradient(var(--panel), var(--panel)) padding-box,
+      linear-gradient(90deg, var(--cyan), var(--magenta), var(--yellow), var(--cyan)) border-box;
+    background-size: 100% 100%, 300% 100%;
+    animation-timing-function: linear; }
+  .num { font-family: 'Orbitron', sans-serif; font-weight: 800; color: var(--yellow); font-size: clamp(10px, 1.8vw, 14px); }
+  .name { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: clamp(13px, 2.4vw, 18px); line-height: 1.1; margin-top: 2px; }
+  .hl { position: absolute; inset: -7px; border: 2px dashed var(--yellow); border-radius: 9px;
+    box-shadow: 0 0 22px rgba(255,225,77,0.6); pointer-events: none; opacity: 1; }
+  .card.hot { box-shadow: 0 0 18px rgba(255,225,77,0.5); }
+  .bulb { position: absolute; width: 7px; height: 7px; border-radius: 50%; z-index: 9; pointer-events: none; animation: bulb 1.6s ease-in-out infinite; }
+  @keyframes bulb { 0%,100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
+  .cgl { position: absolute; width: 130px; height: 130px; border-radius: 50%; z-index: 0; pointer-events: none; animation: twinkle 3s ease-in-out infinite; }
+  .radar { position: absolute; left: 50%; top: 45%; width: 620px; height: 620px; margin: -310px 0 0 -310px; border-radius: 50%; z-index: 0; pointer-events: none;
+    background: conic-gradient(from 0deg, rgba(34,228,255,0) 0deg, rgba(34,228,255,0.35) 40deg, rgba(34,228,255,0) 60deg);
+    border: 1px solid rgba(34,228,255,0.25); animation: radarspin 6s linear infinite; }
+  .radar::before { content: ""; position: absolute; inset: 15%; border-radius: 50%; border: 1px dashed rgba(255,46,136,0.35); }
+  @keyframes radarspin { to { transform: rotate(360deg); } }
+  .lyrics { position: absolute; left: 0; right: 0; top: 36%; text-align: center; z-index: 1; pointer-events: none;
+    font-family: 'Rajdhani', sans-serif; font-weight: 500; font-style: italic; font-size: clamp(16px, 3vw, 22px); line-height: 1.5;
+    color: var(--cyan); opacity: 0.3; padding: 0 12%; text-shadow: 0 0 10px rgba(34,228,255,0.7); transition: opacity 1.2s ease; }
+  .nebula { position: absolute; inset: -10%; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 40% 30% at 30% 30%, rgba(124,58,237,0.38), transparent 70%),
+      radial-gradient(ellipse 35% 25% at 75% 70%, rgba(255,46,136,0.26), transparent 70%);
+    animation: nebula 16s ease-in-out infinite alternate; }
+  @keyframes nebula { from { transform: translate(0,0) scale(1); } to { transform: translate(-3%,2%) scale(1.08); } }
+  .stars { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  .stars i { position: absolute; border-radius: 50%; background: #fff; animation: twinkle 3s ease-in-out infinite; }
+  @keyframes twinkle { 0%,100% { opacity: 0.2; } 50% { opacity: 1; } }
+  .flare { position: absolute; top: -70px; left: -70px; width: 260px; height: 260px; border-radius: 50%; z-index: 0; pointer-events: none;
+    background: radial-gradient(circle, rgba(34,228,255,0.35), transparent 65%); animation: flare 9s ease-in-out infinite; }
+  @keyframes flare { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  .planet { position: absolute; bottom: -210px; left: -150px; width: 380px; height: 380px; border-radius: 50%; z-index: 0; pointer-events: none;
+    background: radial-gradient(circle at 35% 30%, #ffb3d9 0%, #8b3fbf 35%, #2a0f4a 62%, #0A0614 72%);
+    box-shadow: 0 0 60px rgba(255,46,136,0.45), inset -30px -20px 60px rgba(0,0,0,0.6); animation: planet 20s ease-in-out infinite; }
+  .planet::after { content: ""; position: absolute; left: -30%; top: 42%; width: 160%; height: 26px; border-radius: 50%;
+    border: 3px solid rgba(255,225,77,0.55); transform: rotate(-14deg); box-shadow: 0 0 10px rgba(255,225,77,0.4); }
+  @keyframes planet { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-14px) rotate(3deg); } }
+  .bar { position: absolute; left: 0; right: 0; height: 3%; background: #000; z-index: 10; pointer-events: none; }
+  .bar.t { top: 0; }
+  .bar.b { bottom: 0; }
+  .laser { position: absolute; left: 0; right: 0; height: 2px; z-index: 8; pointer-events: none;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    box-shadow: 0 0 12px var(--cyan), 0 0 24px var(--cyan); animation: laser 5s linear infinite; }
+  @keyframes laser { from { top: 0%; } to { top: 100%; } }
+  .stream { position: absolute; top: -60%; z-index: 1; pointer-events: none; font-family: monospace; font-size: 11px;
+    line-height: 1.6; white-space: pre; color: var(--cyan); opacity: 0.22; animation: stream 10s linear infinite; }
+  .stream.s1 { left: 2%; }
+  .stream.s2 { right: 3%; color: var(--magenta); animation-duration: 13s; animation-delay: -5s; }
+  @keyframes stream { from { transform: translateY(0); } to { transform: translateY(170%); } }
+  .orbit { position: absolute; top: 16px; right: 2px; width: 76px; height: 76px; border-radius: 50%; z-index: 5;
+    border: 1px dashed var(--cyan); box-shadow: 0 0 10px rgba(34,228,255,0.4); animation: spin 8s linear infinite; pointer-events: none; }
+  .orbit::after { content: ""; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="nebula"></div>
+  <div class="radar"></div>
+  <div class="stars" id="stars"></div>
+  <div class="flare"></div>
+  <div class="planet"></div>
+  <div class="lyrics" id="lyrics"></div>
+  <div class="bar t"></div>
+  <div class="bar b"></div>
+  <svg class="circuit" viewBox="0 0 560 747" preserveAspectRatio="none">
+    <path d="M0 120 H180 V200 H320 V260 H560"/>
+    <path class="m" d="M560 480 H400 V540 H250 V620 H0"/>
+    <path d="M90 747 V600 H200 V460 H0"/>
+  </svg>
+  <div class="particles" id="particles"></div>
+
+  <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+
+  <svg class="bot" viewBox="0 -4 60 96">
+    <rect x="21" y="-2" width="18" height="11" fill="#1A0F2E" stroke="#22E4FF" stroke-width="1.5"/>
+    <rect x="16" y="8" width="28" height="4" fill="#1A0F2E" stroke="#22E4FF" stroke-width="1.5"/>
+    <circle cx="30" cy="20" r="11" fill="#F5F0FF" stroke="#22E4FF" stroke-width="2"/>
+    <circle cx="30" cy="40" r="15" fill="#F5F0FF" stroke="#22E4FF" stroke-width="2"/>
+    <circle cx="30" cy="68" r="20" fill="#F5F0FF" stroke="#22E4FF" stroke-width="2"/>
+    <circle cx="26" cy="18" r="1.8" fill="#0A0614"/>
+    <circle cx="34" cy="18" r="1.8" fill="#0A0614"/>
+    <path d="M29 21 L38 22 L29 23 Z" fill="#FFE14D"/>
+    <circle cx="30" cy="34" r="1.6" fill="#0A0614"/>
+    <circle cx="30" cy="41" r="1.6" fill="#0A0614"/>
+    <path d="M14 50 H46" stroke="#FF2E88" stroke-width="4"/>
+    <circle cx="30" cy="62" r="1.6" fill="#0A0614"/>
+    <circle cx="30" cy="70" r="1.6" fill="#0A0614"/>
+  </svg>
+  <div class="orbit"></div>
+  <div class="gabi">GABI</div>
+
+  <header>
+    <div class="kicker">FUTURE OF WORK // 2035 // SPANDAN &amp; GABRIEL</div>
+    <h1>JOBS THAT COULD EXIST</h1>
+    <div class="hud">SYS ONLINE [||||||..] 87% // LINK OK <span class="blink">_</span></div>
+    <div class="rule"></div>
+  </header>
+
+  <div class="grid" id="grid">
+    <div class="card"><div class="num">01</div><div class="name">AI Trust Auditor</div></div>
+    <div class="card"><div class="num">02</div><div class="name">Voice Rights Manager</div></div>
+    <div class="card"><div class="num">03</div><div class="name">Home Robot Coach</div></div>
+    <div class="card hot"><div class="num">04</div><div class="name">Algorithm Translator</div><div class="hl"></div></div>
+    <div class="card"><div class="num">05</div><div class="name">Synthetic Tutor Designer</div></div>
+    <div class="card"><div class="num">06</div><div class="name">Story Localiser</div></div>
+    <div class="card"><div class="num">07</div><div class="name">Care Robot Technician</div></div>
+    <div class="card"><div class="num">08</div><div class="name">Digital Memory Curator</div></div>
+  </div>
+
+  <div class="stream s1">1 0 1 1 0 0 1
+0 1 0 0 1 1 0
+1 1 0 1 0 0 1
+0 0 1 0 1 1 0
+1 0 0 1 1 0 1
+0 1 1 0 0 1 0
+1 0 1 0 1 0 1
+0 1 0 1 1 0 0
+1 1 0 0 1 0 1
+0 0 1 1 0 1 1</div>
+  <div class="stream s2">0 1 1 0 1 0 0
+1 0 0 1 0 1 1
+0 1 0 1 1 0 1
+1 1 1 0 0 1 0
+0 0 1 0 1 1 0
+1 0 1 1 0 0 1
+0 1 0 0 1 0 1
+1 0 1 0 1 1 0
+0 1 1 1 0 0 1
+1 0 0 1 0 1 0</div>
+  <div class="sweep"></div>
+  <div class="laser"></div>
+  <div class="scan"></div>
+</div>
+<button class="play" id="music">&#9835; PLAY MUSIC</button>
+
+<script>
+  // 20-second loop. Each job holds on screen for about 2 seconds, then all cards power off and the loop restarts.
+  const LOOP = 20;
+  const pct = s => (s / LOOP * 100).toFixed(2) + '%';
+  const cards = document.querySelectorAll('.card');
+  let css = '';
+  cards.forEach((c, i) => {
+    const on = 1.5 + i * 1.4;
+    const sway = i % 2 ? 1.2 : -1.2;
+    css += `@keyframes c${i} {
+      0%, ${pct(on)} { opacity: 0; transform: translateX(0); filter: none; }
+      ${pct(on + 0.15)} { opacity: 1; transform: translateX(-6px); filter: hue-rotate(60deg) brightness(1.8); }
+      ${pct(on + 0.3)} { transform: translateX(5px); filter: none; }
+      ${pct(on + 0.45)} { transform: translateX(-2px); }
+      ${pct(on + 0.6)} { transform: none; opacity: 1; }
+      ${pct(18.2)} { opacity: 1; transform: none; }
+      ${pct(19)}, 100% { opacity: 0; transform: translateY(6px) rotate(${sway}deg); }
+    }`;
+    c.style.opacity = 1;
+    c.style.animation = `border${i} 4s linear infinite`;
+    css += `@keyframes border${i} { from { background-position: 0 0, 0% 50%; } to { background-position: 0 0, 300% 50%; } }`;
+  });
+  const sheet = document.createElement('style');
+  sheet.textContent = css;
+  document.head.appendChild(sheet);
+
+  // original lyric lines, written for this poster
+  const LINES = [
+    'Every new idea needs a warm hand to hold it',
+    'Machines can count the hours, but only we can count the days',
+    'Keep one hand on mine while the future learns to speak',
+    'The brightest work is the kindness we still choose',
+    'Even in a world of code, your voice is the sound I know',
+    'Build the sky with care, and leave a light on for the ones behind'
+  ];
+  let li = 0;
+  const ly = document.getElementById('lyrics');
+  ly.textContent = LINES[0];
+  setInterval(() => {
+    ly.style.opacity = 0;
+    setTimeout(() => {
+      li = (li + 1) % LINES.length;
+      ly.textContent = LINES[li];
+      ly.style.opacity = 0.3;
+    }, 1200);
+  }, 5000);
+  // Christmas string lights along the edges and glowing corners
+  const XC = ['#FF3B3B', '#3BFF7A', '#FFE14D', '#3BB8FF', '#FF5DDE'];
+  const pz = document.querySelector('.poster');
+  [].forEach(([pos, col]) => {
+    const g = document.createElement('div');
+    g.className = 'cgl';
+    g.setAttribute('style', pos + ';background:radial-gradient(circle, ' + col + '88, transparent 65%)');
+    pz.appendChild(g);
+  });
+  for (let i = 0; i < 0; i++) {
+    const x = (i / 17) * 100;
+    ['top', 'bottom'].forEach((side, s) => {
+      const b = document.createElement('i');
+      b.className = 'bulb';
+      b.style.left = 'calc(' + x + '% - 3px)';
+      b.style[side] = '6px';
+      b.style.background = XC[(i + s * 2) % XC.length];
+      b.style.boxShadow = '0 0 8px ' + b.style.background;
+      b.style.animationDelay = (i * 0.15).toFixed(2) + 's';
+      pz.appendChild(b);
+    });
+  }
+  for (let j = 0; j < 0; j++) {
+    ['left', 'right'].forEach((side) => {
+      const b = document.createElement('i');
+      b.className = 'bulb';
+      b.style.top = 'calc(' + (j / 9 * 100) + '% - 3px)';
+      b.style[side] = '6px';
+      b.style.background = XC[(j + 1) % XC.length];
+      b.style.boxShadow = '0 0 8px ' + b.style.background;
+      b.style.animationDelay = (j * 0.2).toFixed(2) + 's';
+      pz.appendChild(b);
+    });
+  }
+  // falling binary numbers outside the poster, matching the ones inside
+  function bits() {
+    let s = '';
+    for (let r = 0; r < 14; r++) {
+      const row = [];
+      for (let c = 0; c < 7; c++) row.push(Math.random() < 0.5 ? '1' : '0');
+      s += row.join(' ') + '\n';
+    }
+    return s;
+  }
+  for (let k = 0; k < 6; k++) {
+    const d = document.createElement('div');
+    d.className = 'ostream' + (k % 2 ? ' m' : '');
+    d.textContent = bits();
+    d.style.left = (4 + k * 16 + Math.random() * 6).toFixed(1) + '%';
+    d.style.animationDuration = (9 + Math.random() * 6).toFixed(1) + 's';
+    d.style.animationDelay = (-Math.random() * 10).toFixed(1) + 's';
+    document.body.appendChild(d);
+  }
+  // thin falling light streaks outside the poster, matching the laser inside
+  for (let k = 0; k < 16; k++) {
+    const s = document.createElement('div');
+    s.className = 'streak' + (k % 3 === 0 ? ' m' : '');
+    s.style.left = (Math.random() * 100).toFixed(1) + '%';
+    s.style.animationDuration = (3 + Math.random() * 4).toFixed(1) + 's';
+    s.style.animationDelay = (-Math.random() * 6).toFixed(1) + 's';
+    document.body.appendChild(s);
+  }
+  // starfield
+  const sh = document.getElementById('stars');
+  for (let n = 0; n < 70; n++) {
+    const s = document.createElement('i');
+    s.style.left = (Math.random() * 100).toFixed(1) + '%';
+    s.style.top = (Math.random() * 100).toFixed(1) + '%';
+    const size = Math.random() < 0.2 ? 3 : 1.5;
+    s.style.width = s.style.height = size + 'px';
+    s.style.animationDelay = (-Math.random() * 3).toFixed(2) + 's';
+    sh.appendChild(s);
+  }
+  // floating data particles
+  const host = document.getElementById('particles');
+  for (let n = 0; n < 34; n++) {
+    const p = document.createElement('i');
+    if (n % 3 === 0) p.className = 'm';
+    p.style.left = (Math.random() * 100).toFixed(1) + '%';
+    p.style.animationDuration = (6 + Math.random() * 8).toFixed(1) + 's';
+    p.style.animationDelay = (-Math.random() * 12).toFixed(1) + 's';
+    host.appendChild(p);
+  }
+  // gentle original melody: soft sine chords, generated in the browser
+  let mctx = null, mtimer = null, mnext = 0;
+  const chords = [[261.63, 329.63, 392], [220, 261.63, 329.63], [174.61, 220, 261.63], [196, 246.94, 293.66]];
+  function pad(t, freqs, dur) {
+    freqs.forEach((f) => {
+      const o = mctx.createOscillator(), g = mctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.05, t + 1.2);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(mctx.destination);
+      o.start(t); o.stop(t + dur + 0.1);
+    });
+  }
+  function schedule() {
+    if (mnext < mctx.currentTime + 8) {
+      chords.forEach((c, i) => pad(mnext + i * 4, c, 4.2));
+      mnext += chords.length * 4;
+    }
+  }
+  document.getElementById('music').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    if (!mctx) {
+      mctx = new (window.AudioContext || window.webkitAudioContext)();
+      mnext = mctx.currentTime + 0.1;
+      schedule();
+      mtimer = setInterval(schedule, 2000);
+      btn.innerHTML = '&#9632; STOP MUSIC';
+    } else {
+      clearInterval(mtimer); mctx.close(); mctx = null;
+      btn.innerHTML = '&#9835; PLAY MUSIC';
+    }
+  });
+</script>
+</body>
+</html>
