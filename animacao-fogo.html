@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floresta em baixa poligonagem: o fogo e a resposta do Estado</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0d1114; overflow: hidden; font-family: Arial, sans-serif; color: #eef1f3; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #caption { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); width: min(82vw, 760px); text-align: center; font-family: Georgia, serif; font-size: clamp(16px, 2vw, 22px); line-height: 1.4; background: rgba(13,17,20,.6); padding: 14px 20px; border-radius: 8px; box-sizing: border-box; }
+  #panel { position: fixed; right: 16px; top: 16px; width: min(300px, 40vw); background: rgba(13,17,20,.7); border-radius: 10px; padding: 14px 16px; box-sizing: border-box; }
+  #panel h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: .15em; text-transform: uppercase; color: #f2a23a; }
+  .inst { font-size: 13px; line-height: 1.35; padding: 7px 8px; border-left: 3px solid #3a444c; margin: 6px 0; color: #6f7b83; transition: all .6s; }
+  .inst b { display: block; color: #6f7b83; transition: color .6s; }
+  .inst.on { border-left-color: #e0622b; color: #cfd7dc; }
+  .inst.on b { color: #f2a23a; }
+  #final { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; background: rgba(13,17,20,.82); font-family: Georgia, serif; font-size: clamp(16px, 2.6vw, 30px); line-height: 1.5; letter-spacing: .03em; }
+  #ctrl { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 12px; align-items: center; font-size: 13px; color: #9aa6ae; }
+  button { background: #e0622b; color: #fff; border: 0; border-radius: 6px; padding: 7px 14px; font: 13px Arial, sans-serif; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="caption"></div>
+<div id="panel">
+  <h3>Quem responde</h3>
+  <div class="inst" id="i-anepc"><b>ANEPC</b>Coordena o combate e a proteção das pessoas.</div>
+  <div class="inst" id="i-gnr"><b>GNR · SEPNA</b>Corta estradas e apoia a evacuação.</div>
+  <div class="inst" id="i-fa"><b>Forças Armadas</b>Apoiam logística e vigilância, quando solicitadas.</div>
+  <div class="inst" id="i-mun"><b>Municípios</b>Ativam planos municipais e centros de apoio.</div>
+  <div class="inst" id="i-icnf"><b>AGIF · ICNF</b>Avaliam as áreas ardidas e coordenam a recuperação.</div>
+  <div class="inst" id="i-leis"><b>Leis e revisão</b>Depois de 2017, o Estado reviu a prevenção e a recuperação.</div>
+</div>
+<div id="ctrl"><button id="play">Pausar</button><button id="snd">Ativar som</button><span id="tt">0:00</span></div>
+<div id="final">WE ARE PART OF NATURE.<br>WHEN WE FAIL TO PROTECT IT,<br>WE PUT OUR OWN FUTURE AT RISK.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const canvas = document.getElementById('c');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
+  function resize() {
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize); resize();
+
+  // seeded random so the forest is the same each time
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const smooth = (a, b, x) => { const k = clamp((x - a) / (b - a), 0, 1); return k * k * (3 - 2 * k); };
+  const key = (t, arr) => {                       // keyframe colour blend over time
+    for (let i = 0; i < arr.length - 1; i++) {
+      const [t0, c0] = arr[i], [t1, c1] = arr[i + 1];
+      if (t >= t0 && t <= t1) {
+        const k = (t - t0) / (t1 - t0);
+        return new THREE.Color(c0).lerp(new THREE.Color(c1), k);
+      }
+    }
+    return new THREE.Color(arr[arr.length - 1][1]);
+  };
+  const h = (x, z) => 2 * Math.sin(x * 0.06) + 1.6 * Math.cos(z * 0.05) + 0.6 * Math.sin((x + z) * 0.2);
+  const FIRE = new THREE.Vector3(-25, 0, -15);
+
+  // ground
+  const groundGeo = new THREE.PlaneGeometry(260, 260, 40, 40);
+  groundGeo.rotateX(-Math.PI / 2);
+  const gp = groundGeo.attributes.position;
+  for (let i = 0; i < gp.count; i++) gp.setY(i, h(gp.getX(i), gp.getZ(i)));
+  groundGeo.computeVertexNormals();
+  const groundMat = new THREE.MeshLambertMaterial({ color: 0x5a9a4a, flatShading: true });
+  scene.add(new THREE.Mesh(groundGeo, groundMat));
+
+  // lights
+  const sun = new THREE.DirectionalLight(0xffffff, 1);
+  sun.position.set(40, 60, 30);
+  scene.add(sun);
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x334433, 0.6);
+  scene.add(hemi);
+
+  // trees (low-poly cones on cylinders)
+  const trees = [];
+  for (let i = 0; i < 90; i++) {
+    const x = (rnd() - 0.5) * 200, z = (rnd() - 0.5) * 200;
+    if (Math.abs(z - 8) < 4) continue;               // keep the road clear
+    const s = 0.8 + rnd() * 0.9;
+    const g = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35 * s, 0.5 * s, 4 * s, 5), new THREE.MeshLambertMaterial({ color: 0x6b4f3a, flatShading: true }));
+    trunk.position.y = 2 * s; g.add(trunk);
+    const mats = [];
+    for (let k = 0; k < 3; k++) {
+      const m = new THREE.MeshLambertMaterial({ color: 0x2f6b3a, flatShading: true });
+      mats.push(m);
+      const cone = new THREE.Mesh(new THREE.ConeGeometry((2.4 - k * 0.6) * s, 3.2 * s, 6), m);
+      cone.position.y = (4 + k * 2.2) * s; g.add(cone);
+    }
+    g.position.set(x, h(x, z), z);
+    g.userData = { mats, dist: Math.hypot(x - FIRE.x, z - FIRE.z), base: mats[0].color.clone(), trunk, s };
+    scene.add(g); trees.push(g);
+  }
+
+  // houses
+  const houses = [];
+  [[-60, -30], [-50, 20], [30, -40], [50, 14], [-10, 30]].forEach(([x, z], i) => {
+    const g = new THREE.Group();
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 5), new THREE.MeshLambertMaterial({ color: 0xf1e6cf, flatShading: true }));
+    wall.position.y = 2; g.add(wall);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(4.8, 3, 4), new THREE.MeshLambertMaterial({ color: 0xa3493a, flatShading: true }));
+    roof.position.y = 5.5; roof.rotation.y = Math.PI / 4; g.add(roof);
+    g.position.set(x, h(x, z), z);
+    g.userData = { wall, roof, dist: Math.hypot(x - FIRE.x, z - FIRE.z) };
+    scene.add(g); houses.push(g);
+  });
+
+  // road (made of small slabs that follow the ground)
+  for (let x = -110; x <= 110; x += 4) {
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.3, 5), new THREE.MeshLambertMaterial({ color: 0x3b3b3e, flatShading: true }));
+    slab.position.set(x, h(x, 8) + 0.15, 8);
+    scene.add(slab);
+  }
+
+  // fire truck, roadblock, cars and people
+  const truck = new THREE.Group();
+  const tBody = new THREE.Mesh(new THREE.BoxGeometry(7, 3, 3), new THREE.MeshLambertMaterial({ color: 0xc8322b, flatShading: true }));
+  tBody.position.y = 2; truck.add(tBody); scene.add(truck);
+  const block = new THREE.Group();
+  for (let i = 0; i < 6; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.2, 4), new THREE.MeshLambertMaterial({ color: i % 2 ? 0xffffff : 0xe0622b, flatShading: true }));
+    b.position.set(0, 1, -10 + i * 4); block.add(b);
+  }
+  block.position.set(-30, h(-30, 8), 8); block.visible = false; scene.add(block);
+  const cars = [];
+  [[-80, 0x3d6fa8], [-20, 0xe8e0c8], [60, 0x9aa3a8]].forEach(([x, col]) => {
+    const car = new THREE.Mesh(new THREE.BoxGeometry(4, 1.6, 2.2), new THREE.MeshLambertMaterial({ color: col, flatShading: true }));
+    car.position.set(x, h(x, 8) + 1, 8.5); scene.add(car); cars.push(car);
+  });
+  const people = [];
+  [[-62, -26], [-44, 26], [34, -36]].forEach(([x, z]) => {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 2.4, 5), new THREE.MeshLambertMaterial({ color: 0x2f4e6d, flatShading: true }));
+    body.position.y = 1.2; g.add(body);
+    const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), new THREE.MeshLambertMaterial({ color: 0xe0b48a, flatShading: true }));
+    head.position.y = 2.9; g.add(head);
+    g.position.set(x, h(x, z), z); scene.add(g); people.push(g);
+  });
+
+  // flames
+  const flames = [];
+  for (let i = 0; i < 18; i++) {
+    const f = new THREE.Mesh(new THREE.ConeGeometry(1.6, 4, 5), new THREE.MeshBasicMaterial({ color: i % 3 ? 0xf2a23a : 0xe0622b }));
+    f.userData = { ang: rnd() * Math.PI * 2, rr: rnd(), ph: rnd() * 6 };
+    f.visible = false; scene.add(f); flames.push(f);
+  }
+
+  // smoke puffs (pool)
+  const smoke = [];
+  for (let i = 0; i < 90; i++) {
+    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(2.4, 0), new THREE.MeshBasicMaterial({ color: 0x7d7f82, transparent: true, opacity: 0, depthWrite: false }));
+    m.userData = { life: 0 }; m.visible = false; scene.add(m); smoke.push(m);
+  }
+
+  // ash, falling
+  const ash = [];
+  for (let i = 0; i < 140; i++) {
+    const m = new THREE.Mesh(new THREE.TetrahedronGeometry(0.25), new THREE.MeshBasicMaterial({ color: 0xbfc2c4 }));
+    m.position.set((rnd() - 0.5) * 160, 10 + rnd() * 30, (rnd() - 0.5) * 160);
+    m.visible = false; scene.add(m); ash.push(m);
+  }
+
+  // new green sprouts after the fire
+  const sprouts = [];
+  for (let i = 0; i < 14; i++) {
+    const x = FIRE.x + (rnd() - 0.5) * 30, z = FIRE.z + (rnd() - 0.5) * 30;
+    const s = new THREE.Mesh(new THREE.ConeGeometry(0.7, 2.2, 5), new THREE.MeshLambertMaterial({ color: 0x7fc46a, flatShading: true }));
+    s.position.set(x, h(x, z) + 0.8, z); s.scale.set(0.01, 0.01, 0.01); scene.add(s); sprouts.push(s);
+  }
+
+  // captions and institution panel
+  const CAPS = [
+    [0, 10, 'Antes: uma paisagem em equilíbrio. Aldeias, florestas e gente a viver do ritmo da terra.'],
+    [10, 20, 'A seca instala-se. O vento aumenta e a vegetação fica seca.'],
+    [20, 35, 'Uma faísca. Em minutos, o fogo avança. O Estado responde em várias frentes.'],
+    [35, 45, 'Estradas fechadas e comunidades afetadas. Os impactos prolongam-se muito além do fogo.'],
+    [45, 55, 'Depois do fogo, o trabalho começa: avaliar, apoiar as famílias e recuperar a floresta.'],
+    [55, 60, ''],
+  ];
+  const caption = document.getElementById('caption');
+  const inst = { anepc: 21, gnr: 26, fa: 29, mun: 31, icnf: 46, leis: 50 };
+  const instEls = {};
+  Object.keys(inst).forEach(k => instEls[k] = document.getElementById('i-' + (k === 'anepc' ? 'anepc' : k === 'gnr' ? 'gnr' : k === 'fa' ? 'fa' : k === 'mun' ? 'mun' : k === 'icnf' ? 'icnf' : 'leis')));
+  const finalEl = document.getElementById('final');
+  const tt = document.getElementById('tt');
+  const btn = document.getElementById('play');
+
+  // sky, ground, light colours over time
+  const SKY = [[0, '#9fd3ef'], [12, '#e0b070'], [22, '#c5603a'], [36, '#2a2827'], [46, '#7b7f84'], [56, '#9fd3ef']];
+  const GRN = [[0, '#5a9a4a'], [12, '#a8a04a'], [22, '#8a6a3a'], [36, '#2a2622'], [46, '#6e6a64'], [56, '#4f8e44']];
+  const FOL = [[0, '#2f6b3a'], [22, '#5b5a2c'], [36, '#1d1a18'], [46, '#3a3634'], [58, '#2f6b3a']];
+
+  let playing = true, t = 0, last = performance.now();
+
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (playing) t = (t + dt) % 60;
+
+    const sky = key(t, SKY);
+    scene.background = sky;
+    scene.fog = new THREE.Fog(sky, 90, 260);
+    groundMat.color.copy(key(t, GRN));
+    sun.intensity = 1 - 0.55 * smooth(20, 34, t) + 0.25 * smooth(46, 58, t);
+
+    const fireR = smooth(20, 34, t) * 34 * (1 - 0.0 * smooth(40, 50, t));
+    const fireOn = t > 19 && t < 42;
+    const regrow = smooth(48, 58, t);
+    const foliage = key(t, FOL);
+
+    // trees: burn inside the fire radius, regrow later
+    trees.forEach(g => {
+      const burn = clamp((fireR - g.userData.dist) / 6, 0, 1) * (1 - regrow);
+      g.userData.mats.forEach(m => {
+        m.color.copy(foliage).lerp(new THREE.Color('#141211'), burn);
+      });
+      g.userData.trunk.material.color.set(0x6b4f3a).lerp(new THREE.Color('#222'), burn);
+      g.scale.y = 1 - 0.35 * burn;
+    });
+
+    // houses blacken inside the fire
+    houses.forEach(g => {
+      const b = clamp((fireR - g.userData.dist) / 6, 0, 1) * (1 - regrow * 0.5);
+      g.userData.wall.material.color.set(0xf1e6cf).lerp(new THREE.Color('#2a2624'), b);
+      g.userData.roof.material.color.set(0xa3493a).lerp(new THREE.Color('#2a2624'), b);
+    });
+
+    // flames at the fire front
+    flames.forEach((f, i) => {
+      f.visible = fireOn;
+      const d = f.userData;
+      const rr = (0.3 + 0.7 * d.rr) * Math.max(4, fireR * 0.85);
+      f.position.set(FIRE.x + Math.cos(d.ang) * rr, h(FIRE.x, FIRE.z) + 2, FIRE.z + Math.sin(d.ang) * rr);
+      f.scale.y = fireOn ? (0.6 + 0.5 * Math.sin(t * 9 + d.ph)) : 0.01;
+    });
+
+    // smoke spawns while the fire burns
+    if (fireOn && Math.random() < 0.55) {
+      const m = smoke.find(s => s.userData.life <= 0);
+      if (m) {
+        const a = Math.random() * Math.PI * 2, rr = Math.random() * Math.max(6, fireR * 0.7);
+        m.position.set(FIRE.x + Math.cos(a) * rr, h(FIRE.x, FIRE.z) + 4, FIRE.z + Math.sin(a) * rr);
+        m.userData.life = 1; m.visible = true;
+      }
+    }
+    smoke.forEach(m => {
+      if (m.userData.life > 0) {
+        m.userData.life -= dt * 0.22;
+        m.position.y += dt * 4.5;
+        m.position.x += dt * 1.2;
+        m.scale.setScalar(1 + (1 - m.userData.life) * 2.2);
+        m.material.opacity = Math.max(0, m.userData.life) * 0.45;
+        if (m.userData.life <= 0) { m.visible = false; m.material.opacity = 0; }
+      }
+    });
+
+    // ash falls after the fire
+    const ashOn = smooth(40, 46, t) * (1 - smooth(55, 58, t));
+    ash.forEach(m => {
+      m.visible = ashOn > 0.05;
+      m.position.y -= dt * 2.2;
+      m.position.x += Math.sin(t + m.id) * dt * 0.6;
+      if (m.position.y < 0) { m.position.y = 35 + Math.random() * 15; m.position.x = (Math.random() - 0.5) * 160; m.position.z = (Math.random() - 0.5) * 160; }
+    });
+
+    // sprouts appear at the end
+    sprouts.forEach((s, i) => {
+      const k = smooth(49 + i * 0.25, 56 + i * 0.25, t);
+      s.scale.setScalar(Math.max(0.01, k));
+    });
+
+    // emergency response on the road
+    truck.position.set(lerpNum(-110, -40, smooth(21, 28, t)), h(-40, 8) + 0.5, 6);
+    truck.visible = t >= 21;
+    block.visible = t >= 26 && t < 42;
+    cars.forEach((c, i) => {
+      const dir = t > 27 && t < 40 ? 1 : 0;
+      c.position.x += dir * dt * 6;
+      c.visible = !(t >= 40 && t < 44);
+    });
+    people.forEach((p, i) => {
+      if (t > 27 && t < 44) p.position.x += dt * 1.5;
+      p.visible = !(t >= 44 && t < 46);
+    });
+
+    // camera orbit
+    const a = 0.6 + t * 0.045;
+    camera.position.set(Math.cos(a) * 80, 24, Math.sin(a) * 80 - 6);
+    camera.lookAt(0, 4, -5);
+
+    renderer.render(scene, camera);
+    audioUpdate(t);
+
+    // captions
+    const cap = CAPS.find(([a0, b0]) => t >= a0 && t < b0);
+    caption.textContent = cap ? cap[2] : '';
+    caption.style.opacity = cap && cap[2] ? 1 : 0;
+    Object.keys(inst).forEach(k => {
+      instEls[k].classList.toggle('on', t >= inst[k] && t < 60);
+    });
+    finalEl.style.display = t >= 55 ? 'flex' : 'none';
+    tt.textContent = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')} / 1:00`;
+
+    requestAnimationFrame(frame);
+  }
+  // ---- sound: synthesised in the browser (no audio files) ----
+  let AC = null, master = null, windG = null, droneG = null, crackleG = null, sirenG = null, musicG = null, noiseBuf = null, soundOn = false, nextBird = 0, nextPop = 0;
+  function makeNoise(ctx) { const len = ctx.sampleRate * 2, b = ctx.createBuffer(1, len, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; return b; }
+  function toggleSound() {
+    if (!AC) {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      master = AC.createGain(); master.gain.value = 0; master.connect(AC.destination);
+      noiseBuf = makeNoise(AC);
+      const wind = AC.createBufferSource(); wind.buffer = noiseBuf; wind.loop = true;
+      const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500;
+      windG = AC.createGain(); windG.gain.value = 0; wind.connect(lp); lp.connect(windG); windG.connect(master); wind.start();
+      const drone = AC.createOscillator(); drone.type = 'sine'; drone.frequency.value = 55;
+      droneG = AC.createGain(); droneG.gain.value = 0; drone.connect(droneG); droneG.connect(master); drone.start();
+      const crk = AC.createBufferSource(); crk.buffer = noiseBuf; crk.loop = true;
+      const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.8;
+      crackleG = AC.createGain(); crackleG.gain.value = 0; crk.connect(bp); bp.connect(crackleG); crackleG.connect(master); crk.start();
+      const siren = AC.createOscillator(); siren.type = 'sawtooth'; siren.frequency.value = 660;
+      const sf = AC.createBiquadFilter(); sf.type = 'lowpass'; sf.frequency.value = 1100;
+      sirenG = AC.createGain(); sirenG.gain.value = 0; siren.connect(sf); sf.connect(sirenG); sirenG.connect(master);
+      const lfo = AC.createOscillator(); lfo.frequency.value = 0.35; const lfoG = AC.createGain(); lfoG.gain.value = 260;
+      lfo.connect(lfoG); lfoG.connect(siren.frequency); siren.start(); lfo.start();
+      musicG = AC.createGain(); musicG.gain.value = 0; musicG.connect(master);
+      [261.6, 329.6, 392.0].forEach(f => { const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = f; o.connect(musicG); o.start(); });
+    }
+    soundOn = !soundOn;
+    if (AC.state === 'suspended') AC.resume();
+    master.gain.setTargetAtTime(soundOn ? 0.8 : 0, AC.currentTime, 0.2);
+    document.getElementById('snd').textContent = soundOn ? 'Desligar som' : 'Ativar som';
+  }
+  function setG(g, v) { if (g && AC) g.gain.setTargetAtTime(v, AC.currentTime, 0.4); }
+  function pop(now) {
+    const s = AC.createBufferSource(); s.buffer = noiseBuf;
+    const f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1200;
+    const g = AC.createGain(); g.gain.setValueAtTime(0.25, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    s.connect(f); f.connect(g); g.connect(master); s.start(now, Math.random() * 1.5, 0.08);
+  }
+  function birdChirp() {
+    const now = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(2200, now); o.frequency.exponentialRampToValueAtTime(3400, now + 0.12); o.frequency.exponentialRampToValueAtTime(2600, now + 0.22);
+    g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.06, now + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+    o.connect(g); g.connect(master); o.start(now); o.stop(now + 0.27);
+  }
+  function audioUpdate(t) {
+    if (!AC || !soundOn) return;
+    const wind = clamp(0.05 + 0.25 * smooth(8, 14, t) + 0.35 * smooth(20, 30, t) - 0.25 * smooth(36, 44, t) + 0.25 * smooth(54, 58, t), 0, 0.5);
+    setG(windG, wind);
+    setG(droneG, 0.09 * smooth(9, 18, t) * (1 - smooth(20, 26, t)));
+    setG(crackleG, 0.04 * smooth(19, 24, t) * (1 - smooth(40, 44, t)));
+    setG(sirenG, 0.05 * smooth(21, 24, t) * (1 - smooth(38, 42, t)));
+    setG(musicG, 0.09 * smooth(54, 58, t));
+    const now = AC.currentTime;
+    if (now > nextBird && (t < 14 || t > 52)) { birdChirp(); nextBird = now + 1.5 + Math.random() * 3; }
+    if (t > 19 && t < 40 && now > nextPop) { pop(now); nextPop = now + 0.05 + Math.random() * 0.3; }
+  }
+  function lerpNum(a, b, k) { return a + (b - a) * k; }
+  btn.addEventListener('click', () => { playing = !playing; btn.textContent = playing ? 'Pausar' : 'Continuar'; last = performance.now(); });
+  document.getElementById('snd').addEventListener('click', toggleSound);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
